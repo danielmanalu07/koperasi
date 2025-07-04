@@ -1,22 +1,30 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:koperasi/core/routes/app_routes.dart';
 import 'package:koperasi/core/routes/initial_routes.dart';
 import 'package:koperasi/core/utils/local_dataSource.dart';
+import 'package:koperasi/features/riwayat_pembayaran/presentation/bloc/bayar_tagihan/bayar_tagihan_bloc.dart';
+import 'package:koperasi/features/riwayat_pembayaran/presentation/bloc/bayar_tagihan/bayar_tagihan_event.dart';
+import 'package:koperasi/features/riwayat_pembayaran/presentation/bloc/riwayat_pembayaran_bloc.dart';
+import 'package:koperasi/features/riwayat_pembayaran/presentation/bloc/riwayat_pembayaran_event.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'register_page.dart';
 import 'forgot_password_page.dart';
 
+import 'core/injection_container.dart' as di;
+
 // --- MODIFIKASI FUNGSI main() ---
 void main() async {
   // Pastikan semua binding Flutter siap sebelum menjalankan kode async
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('id_ID', null);
+  di.init();
 
   // Dapatkan instance SharedPreferences
   // final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -69,22 +77,33 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'Koperasi Modern',
-      theme: ThemeData(
-        primarySwatch: Colors.red,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-        fontFamily: 'Poppins',
-      ),
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<RiwayatPembayaranBloc>(
+          create: (_) =>
+              di.sl<RiwayatPembayaranBloc>()..add(GetRiwayatPembayaranEvent()),
+        ),
+        BlocProvider<BayarTagihanBloc>(
+          create: (_) => di.sl<BayarTagihanBloc>(),
+        ),
       ],
-      supportedLocales: const [Locale('id', 'ID')],
-      locale: const Locale('id', 'ID'),
-      debugShowCheckedModeBanner: false,
-      routerConfig: appRoute,
+      child: MaterialApp.router(
+        title: 'Koperasi Modern',
+        theme: ThemeData(
+          primarySwatch: Colors.red,
+          visualDensity: VisualDensity.adaptivePlatformDensity,
+          fontFamily: 'Poppins',
+        ),
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [Locale('id', 'ID')],
+        locale: const Locale('id', 'ID'),
+        debugShowCheckedModeBanner: false,
+        routerConfig: appRoute,
+      ),
     );
   }
 }
