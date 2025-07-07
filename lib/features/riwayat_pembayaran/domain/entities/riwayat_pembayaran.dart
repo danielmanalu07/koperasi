@@ -9,8 +9,6 @@ class RiwayatPembayaran extends Equatable {
   final DateTime createdAt;
   final DateTime updatedAt;
   final String type;
-  final int pinjamanDetailStatus;
-  final String anggotaName;
   final TransactionHistoryEntity? transaction; // Make this nullable
 
   const RiwayatPembayaran({
@@ -22,8 +20,6 @@ class RiwayatPembayaran extends Equatable {
     required this.createdAt,
     required this.updatedAt,
     required this.type,
-    required this.pinjamanDetailStatus,
-    required this.anggotaName,
     this.transaction, // Make it optional in constructor
   });
 
@@ -37,8 +33,6 @@ class RiwayatPembayaran extends Equatable {
     createdAt,
     updatedAt,
     type,
-    pinjamanDetailStatus,
-    anggotaName,
     transaction,
   ];
 }

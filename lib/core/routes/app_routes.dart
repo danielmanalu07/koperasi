@@ -4,6 +4,7 @@ import 'package:koperasi/core/utils/local_datasource.dart';
 import 'package:koperasi/core/widgets/main_app_layout.dart';
 import 'package:koperasi/features/notifications/presentation/pages/notification_page.dart';
 import 'package:koperasi/main.dart';
+import 'package:koperasi/profil_form_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // Import semua halaman yang akan digunakan di routing
@@ -178,6 +179,14 @@ final GoRouter appRoute = GoRouter(
           builder: (context, state) {
             final token = state.extra as String?;
             return ProfilPage(token: token);
+          },
+        ),
+        GoRoute(
+          path: InitialRoutes.profileEdit,
+          name: InitialRoutes.profileEdit.substring(1), // Nama rute: 'profile'
+          builder: (context, state) {
+            final token = state.extra as String?;
+            return ProfilFormPage(token: token!);
           },
         ),
       ],

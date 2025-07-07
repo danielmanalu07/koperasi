@@ -7,7 +7,10 @@ import 'package:koperasi/features/riwayat_pembayaran/domain/entities/riwayat_pem
 import 'package:http/http.dart' as http;
 
 abstract class RiwayatPemabayaranRemoteDatasource {
-  Future<List<RiwayatPembayaran>> getRiwayatPembayaran(String token);
+  Future<List<RiwayatPembayaran>> getRiwayatPembayaran(
+    int pinjamanDetail,
+    String token,
+  );
 }
 
 class RiwayatPemabayaranRemoteDatasourceImpl
@@ -17,8 +20,13 @@ class RiwayatPemabayaranRemoteDatasourceImpl
   RiwayatPemabayaranRemoteDatasourceImpl(this.client);
 
   @override
-  Future<List<RiwayatPembayaran>> getRiwayatPembayaran(String token) async {
-    final uri = Uri.parse('${ApiConstant.baseUrl}/pinjaman/payment/all');
+  Future<List<RiwayatPembayaran>> getRiwayatPembayaran(
+    int pinjamanDetail,
+    String token,
+  ) async {
+    final uri = Uri.parse(
+      '${ApiConstant.baseUrl}/pinjaman/$pinjamanDetail/payment',
+    );
 
     try {
       final response = await client.get(
@@ -36,7 +44,7 @@ class RiwayatPemabayaranRemoteDatasourceImpl
 
       if (response.statusCode == 200) {
         // Access 'data' field, then 'data' array inside it
-        final List<dynamic> data = jsonResponse['data']['data'];
+        final List<dynamic> data = jsonResponse['data'];
         final List<RiwayatPembayaran> riwayat_pembayaran = data
             .map(
               (json) =>

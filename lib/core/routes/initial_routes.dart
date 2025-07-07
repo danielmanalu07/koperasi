@@ -16,6 +16,7 @@ class InitialRoutes {
   static const String promo = '/promo';
   static const String riwayat = '/riwayat';
   static const String profile = '/profile';
+  static const String profileEdit = '/profile/edit';
 
   static const String simpanan = 'simpanan';
   static const String tabungan = 'tabungan';

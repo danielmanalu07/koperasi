@@ -9,6 +9,8 @@ import 'package:koperasi/core/routes/initial_routes.dart';
 import 'package:koperasi/core/utils/local_dataSource.dart';
 import 'package:koperasi/features/riwayat_pembayaran/presentation/bloc/bayar_tagihan/bayar_tagihan_bloc.dart';
 import 'package:koperasi/features/riwayat_pembayaran/presentation/bloc/bayar_tagihan/bayar_tagihan_event.dart';
+import 'package:koperasi/features/riwayat_pembayaran/presentation/bloc/pinjaman_remaining/pinjaman_remaining_bloc.dart';
+import 'package:koperasi/features/riwayat_pembayaran/presentation/bloc/pinjaman_remaining/pinjaman_remaining_event.dart';
 import 'package:koperasi/features/riwayat_pembayaran/presentation/bloc/riwayat_pembayaran_bloc.dart';
 import 'package:koperasi/features/riwayat_pembayaran/presentation/bloc/riwayat_pembayaran_event.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -80,11 +82,14 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider<RiwayatPembayaranBloc>(
-          create: (_) =>
-              di.sl<RiwayatPembayaranBloc>()..add(GetRiwayatPembayaranEvent()),
+          create: (_) => di.sl<RiwayatPembayaranBloc>(),
         ),
         BlocProvider<BayarTagihanBloc>(
           create: (_) => di.sl<BayarTagihanBloc>(),
+        ),
+        BlocProvider<PinjamanRemainingBloc>(
+          create: (_) =>
+              di.sl<PinjamanRemainingBloc>()..add(GetPinjamanRemainingEvent()),
         ),
       ],
       child: MaterialApp.router(

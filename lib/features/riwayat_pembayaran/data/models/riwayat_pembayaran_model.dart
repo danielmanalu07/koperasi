@@ -10,8 +10,6 @@ class RiwayatPembayaranModel extends RiwayatPembayaran {
     required super.createdAt,
     required super.updatedAt,
     required super.type,
-    required super.pinjamanDetailStatus,
-    required super.anggotaName,
     super.transaction,
   });
 
@@ -25,8 +23,6 @@ class RiwayatPembayaranModel extends RiwayatPembayaran {
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
       type: json['type'] as String,
-      pinjamanDetailStatus: json['pinjaman_detail_status'] as int,
-      anggotaName: json['anggota_name'] as String,
       transaction: json['transaction'] != null
           ? TransactionHistoryModel.fromJson(
               json['transaction'] as Map<String, dynamic>,
@@ -45,8 +41,6 @@ class RiwayatPembayaranModel extends RiwayatPembayaran {
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
       'type': type,
-      'pinjaman_detail_status': pinjamanDetailStatus,
-      'anggota_name': anggotaName,
     };
     if (transaction != null) {
       data['transaction'] = (transaction as TransactionHistoryModel).toJson();

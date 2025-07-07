@@ -18,13 +18,14 @@ class RiwayatPembayaranRepositoryImpl implements RiwayatPembayaranRepository {
   });
 
   @override
-  Future<Either<Failures, List<RiwayatPembayaran>>>
-  getRiwayatPembayaran() async {
+  Future<Either<Failures, List<RiwayatPembayaran>>> getRiwayatPembayaran(
+    int pinjamanDetail,
+  ) async {
     if (await networkInfo.isConnected) {
       try {
         final token = await localDatasource.getToken();
         final riwayatPembayaran = await riwayatPemabayaranRemoteDatasource
-            .getRiwayatPembayaran(token!);
+            .getRiwayatPembayaran(pinjamanDetail, token!);
         return Right(riwayatPembayaran);
       } catch (e) {
         throw Left(e.toString());

@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io'; // Import untuk File
 import 'package:image_picker/image_picker.dart';
-
+import 'package:koperasi/core/widgets/ktp_camera_screen.dart';
 
 class ProfilFormPage extends StatefulWidget {
   final String token;
@@ -31,9 +31,11 @@ class _ProfilFormPageState extends State<ProfilFormPage> {
   final TextEditingController _namaLengkapController = TextEditingController();
   final TextEditingController _tempatLahirController = TextEditingController();
   final TextEditingController _tanggalLahirController = TextEditingController();
-  final TextEditingController _alamatLengkapController = TextEditingController();
+  final TextEditingController _alamatLengkapController =
+      TextEditingController();
   final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _nomorWhatsappController = TextEditingController();
+  final TextEditingController _nomorWhatsappController =
+      TextEditingController();
   final TextEditingController _pekerjaanController = TextEditingController();
   final TextEditingController _nomorKtpController = TextEditingController();
 
@@ -41,7 +43,12 @@ class _ProfilFormPageState extends State<ProfilFormPage> {
   final List<String> _jenisKelaminOptions = ['Laki-laki', 'Perempuan'];
 
   String? _selectedStatusMenikah;
-  final List<String> _statusMenikahOptions = ['Belum Menikah', 'Menikah', 'Cerai Hidup', 'Cerai Mati'];
+  final List<String> _statusMenikahOptions = [
+    'Belum Menikah',
+    'Menikah',
+    'Cerai Hidup',
+    'Cerai Mati',
+  ];
 
   DateTime? _selectedDate;
   File? _ktpImageFile;
@@ -83,8 +90,11 @@ class _ProfilFormPageState extends State<ProfilFormPage> {
               _nomorKtpController.text = anggotaData['nik'] ?? '';
               _tempatLahirController.text = anggotaData['birth_place'] ?? '';
               _tanggalLahirController.text = anggotaData['birth_date'] != null
-                ? DateFormat('dd MMMM yyyy', 'id_ID').format(DateTime.parse(anggotaData['birth_date']))
-                : '';
+                  ? DateFormat(
+                      'dd MMMM yyyy',
+                      'id_ID',
+                    ).format(DateTime.parse(anggotaData['birth_date']))
+                  : '';
               if (anggotaData['birth_date'] != null) {
                 _selectedDate = DateTime.parse(anggotaData['birth_date']);
               }
@@ -102,11 +112,14 @@ class _ProfilFormPageState extends State<ProfilFormPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {
-      if(mounted) {
+      if (mounted) {
         setState(() => _isLoadingData = false);
       }
     }
@@ -115,9 +128,13 @@ class _ProfilFormPageState extends State<ProfilFormPage> {
   Future<void> _pickImageFromCamera() async {
     final ImagePicker picker = ImagePicker();
     // Gunakan ImageSource.camera untuk memastikan hanya kamera yang terbuka
-    final XFile? pickedFile = await picker.pickImage(
-      source: ImageSource.camera,
-      imageQuality: 80, // Kompresi kualitas gambar untuk mengurangi ukuran
+    // final XFile? pickedFile = await picker.pickImage(
+    //   source: ImageSource.camera,
+    //   imageQuality: 80, // Kompresi kualitas gambar untuk mengurangi ukuran
+    // );
+    final File? pickedFile = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const KtpCameraScreen()),
     );
 
     if (pickedFile != null) {
@@ -135,23 +152,30 @@ class _ProfilFormPageState extends State<ProfilFormPage> {
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
     if (_anggotaId == null) {
-       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('ID Anggota tidak ditemukan, tidak dapat menyimpan.'), backgroundColor: Colors.red),
-        );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('ID Anggota tidak ditemukan, tidak dapat menyimpan.'),
+          backgroundColor: Colors.red,
+        ),
+      );
       return;
     }
 
     if (_ktpImageFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Harap unggah foto KTP Anda.'), backgroundColor: Colors.orangeAccent),
+        const SnackBar(
+          content: Text('Harap unggah foto KTP Anda.'),
+          backgroundColor: Colors.orangeAccent,
+        ),
       );
       return;
     }
 
     setState(() => _isSaving = true);
 
-    final String apiUrl = 'https://api-jatlinko.naditechno.id/api/v1/anggota/$_anggotaId';
-    
+    final String apiUrl =
+        'https://api-jatlinko.naditechno.id/api/v1/anggota/$_anggotaId';
+
     try {
       final response = await http.put(
         Uri.parse(apiUrl),
@@ -163,7 +187,9 @@ class _ProfilFormPageState extends State<ProfilFormPage> {
         body: jsonEncode({
           // Data yang dikirimkan sesuai contoh, beberapa diambil dari form
           "anggota_category_id": "1", // Hardcoded sesuai contoh
-          "cabang_id": _cabangId ?? 1, // Gunakan ID cabang dari data user, atau fallback ke 1
+          "cabang_id":
+              _cabangId ??
+              1, // Gunakan ID cabang dari data user, atau fallback ke 1
           "name": _namaLengkapController.text,
           "email": _emailController.text,
           "phone": _nomorWhatsappController.text,
@@ -172,44 +198,53 @@ class _ProfilFormPageState extends State<ProfilFormPage> {
           // Field lain dari form
           "nik": _nomorKtpController.text,
           "birth_place": _tempatLahirController.text,
-          "birth_date": _selectedDate != null ? DateFormat('yyyy-MM-dd').format(_selectedDate!) : null,
+          "birth_date": _selectedDate != null
+              ? DateFormat('yyyy-MM-dd').format(_selectedDate!)
+              : null,
           "gender": _selectedJenisKelamin,
           "marital_status": _selectedStatusMenikah,
           "job": _pekerjaanController.text,
         }),
       );
 
-       if (mounted) {
+      if (mounted) {
         final responseData = jsonDecode(response.body);
-         if (response.statusCode == 200 && responseData['code'] == 200) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(responseData['message'] ?? 'Profil berhasil diperbarui!'), backgroundColor: Colors.teal.shade700),
-            );
-            Navigator.pop(context, true); // Kembali & kirim sinyal untuk refresh
-         } else {
-            String errorMessage = responseData['message'] ?? 'Gagal menyimpan profil.';
-            if (responseData['errors'] != null) {
-              errorMessage = responseData['errors'].values.first[0];
-            }
-             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
-            );
-         }
-       }
-
-    } catch(e) {
+        if (response.statusCode == 200 && responseData['code'] == 200) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                responseData['message'] ?? 'Profil berhasil diperbarui!',
+              ),
+              backgroundColor: Colors.teal.shade700,
+            ),
+          );
+          Navigator.pop(context, true); // Kembali & kirim sinyal untuk refresh
+        } else {
+          String errorMessage =
+              responseData['message'] ?? 'Gagal menyimpan profil.';
+          if (responseData['errors'] != null) {
+            errorMessage = responseData['errors'].values.first[0];
+          }
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
+          );
+        }
+      }
+    } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Terjadi kesalahan: ${e.toString()}'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Terjadi kesalahan: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {
-      if(mounted) {
+      if (mounted) {
         setState(() => _isSaving = false);
       }
     }
   }
-
 
   @override
   void dispose() {
@@ -235,7 +270,10 @@ class _ProfilFormPageState extends State<ProfilFormPage> {
     if (picked != null && picked != _selectedDate) {
       setState(() {
         _selectedDate = picked;
-        _tanggalLahirController.text = DateFormat('dd MMMM yyyy', 'id_ID').format(picked);
+        _tanggalLahirController.text = DateFormat(
+          'dd MMMM yyyy',
+          'id_ID',
+        ).format(picked);
       });
     }
   }
@@ -244,10 +282,7 @@ class _ProfilFormPageState extends State<ProfilFormPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Profil',
-        style: TextStyle(
-          color: Colors.white
-        )),
+        title: const Text('Edit Profil', style: TextStyle(color: Colors.white)),
         backgroundColor: Color(0xFFE30031),
         elevation: 1,
       ),
@@ -264,7 +299,9 @@ class _ProfilFormPageState extends State<ProfilFormPage> {
                       controller: _namaLengkapController,
                       labelText: 'Nama Lengkap*',
                       icon: Icons.person_outline,
-                      validator: (value) => value == null || value.isEmpty ? 'Nama lengkap tidak boleh kosong' : null,
+                      validator: (value) => value == null || value.isEmpty
+                          ? 'Nama lengkap tidak boleh kosong'
+                          : null,
                     ),
                     _buildTextFormField(
                       controller: _tempatLahirController,
@@ -282,7 +319,9 @@ class _ProfilFormPageState extends State<ProfilFormPage> {
                         ),
                         readOnly: true,
                         onTap: () => _selectDate(context),
-                        validator: (value) => value == null || value.isEmpty ? 'Tanggal lahir tidak boleh kosong' : null,
+                        validator: (value) => value == null || value.isEmpty
+                            ? 'Tanggal lahir tidak boleh kosong'
+                            : null,
                       ),
                     ),
                     _buildDropdownFormField(
@@ -295,14 +334,18 @@ class _ProfilFormPageState extends State<ProfilFormPage> {
                           _selectedJenisKelamin = value;
                         });
                       },
-                      validator: (value) => value == null ? 'Jenis kelamin tidak boleh kosong' : null,
+                      validator: (value) => value == null
+                          ? 'Jenis kelamin tidak boleh kosong'
+                          : null,
                     ),
                     _buildTextFormField(
                       controller: _alamatLengkapController,
                       labelText: 'Alamat Lengkap*',
                       icon: Icons.home_outlined,
                       maxLines: 3,
-                      validator: (value) => value == null || value.isEmpty ? 'Alamat tidak boleh kosong' : null,
+                      validator: (value) => value == null || value.isEmpty
+                          ? 'Alamat tidak boleh kosong'
+                          : null,
                     ),
                     _buildDropdownFormField(
                       value: _selectedStatusMenikah,
@@ -314,7 +357,9 @@ class _ProfilFormPageState extends State<ProfilFormPage> {
                           _selectedStatusMenikah = value;
                         });
                       },
-                      validator: (value) => value == null ? 'Status menikah tidak boleh kosong' : null,
+                      validator: (value) => value == null
+                          ? 'Status menikah tidak boleh kosong'
+                          : null,
                     ),
                     _buildTextFormField(
                       controller: _emailController,
@@ -322,8 +367,10 @@ class _ProfilFormPageState extends State<ProfilFormPage> {
                       icon: Icons.email_outlined,
                       keyboardType: TextInputType.emailAddress,
                       validator: (value) {
-                        if (value == null || value.isEmpty) return 'Email tidak boleh kosong';
-                        if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) return 'Format email tidak valid';
+                        if (value == null || value.isEmpty)
+                          return 'Email tidak boleh kosong';
+                        if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value))
+                          return 'Format email tidak valid';
                         return null;
                       },
                     ),
@@ -334,8 +381,10 @@ class _ProfilFormPageState extends State<ProfilFormPage> {
                       keyboardType: TextInputType.phone,
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       validator: (value) {
-                        if (value == null || value.isEmpty) return 'Nomor WhatsApp tidak boleh kosong';
-                        if (value.length < 10 || value.length > 15) return 'Nomor WhatsApp tidak valid';
+                        if (value == null || value.isEmpty)
+                          return 'Nomor WhatsApp tidak boleh kosong';
+                        if (value.length < 10 || value.length > 15)
+                          return 'Nomor WhatsApp tidak valid';
                         return null;
                       },
                     ),
@@ -355,7 +404,10 @@ class _ProfilFormPageState extends State<ProfilFormPage> {
                         LengthLimitingTextInputFormatter(16),
                       ],
                       validator: (value) {
-                        if (value != null && value.isNotEmpty && value.length != 16) return 'Nomor KTP harus 16 digit';
+                        if (value != null &&
+                            value.isNotEmpty &&
+                            value.length != 16)
+                          return 'Nomor KTP harus 16 digit';
                         return null;
                       },
                     ),
@@ -375,7 +427,10 @@ class _ProfilFormPageState extends State<ProfilFormPage> {
                       decoration: BoxDecoration(
                         color: Colors.grey.shade200,
                         borderRadius: BorderRadius.circular(10.0),
-                        border: Border.all(color: Colors.grey.shade400, width: 1.5),
+                        border: Border.all(
+                          color: Colors.grey.shade400,
+                          width: 1.5,
+                        ),
                       ),
                       child: _ktpImageFile == null
                           ? const Center(
@@ -397,30 +452,37 @@ class _ProfilFormPageState extends State<ProfilFormPage> {
                       onPressed: _pickImageFromCamera,
                       icon: const Icon(Icons.camera_alt_outlined),
                       label: const Text('Buka Kamera'),
-                       style: OutlinedButton.styleFrom(
+                      style: OutlinedButton.styleFrom(
                         foregroundColor: Color(0xFFE30031),
                         side: BorderSide(color: Color(0xFFE30031), width: 1.5),
                         padding: const EdgeInsets.symmetric(vertical: 12.0),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0))
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.0),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 30.0),
                     _isSaving
-                      ? const Center(child: CircularProgressIndicator())
-                      : ElevatedButton.icon(
-                          onPressed: _submitForm,
-                          icon: const Icon(Icons.save_outlined),
-                          label: const Text('Simpan Perubahan'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Color(0xFFE30031),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 16.0),
-                            textStyle: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10.0)
-                            )
+                        ? const Center(child: CircularProgressIndicator())
+                        : ElevatedButton.icon(
+                            onPressed: _submitForm,
+                            icon: const Icon(Icons.save_outlined),
+                            label: const Text('Simpan Perubahan'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Color(0xFFE30031),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 16.0,
+                              ),
+                              textStyle: const TextStyle(
+                                fontSize: 16.0,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10.0),
+                              ),
+                            ),
                           ),
-                        ),
                   ],
                 ),
               ),
@@ -428,15 +490,19 @@ class _ProfilFormPageState extends State<ProfilFormPage> {
     );
   }
 
-  InputDecoration _inputDecoration({required String labelText, String? hintText, required IconData icon}) {
-     return InputDecoration(
-        labelText: labelText,
-        hintText: hintText,
-        prefixIcon: Icon(icon, color: Colors.black),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.0)),
-        filled: true,
-        fillColor: Colors.black.withOpacity(0.1),
-      );
+  InputDecoration _inputDecoration({
+    required String labelText,
+    String? hintText,
+    required IconData icon,
+  }) {
+    return InputDecoration(
+      labelText: labelText,
+      hintText: hintText,
+      prefixIcon: Icon(icon, color: Colors.black),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10.0)),
+      filled: true,
+      fillColor: Colors.black.withOpacity(0.1),
+    );
   }
 
   Widget _buildTextFormField({
@@ -453,7 +519,11 @@ class _ProfilFormPageState extends State<ProfilFormPage> {
       padding: const EdgeInsets.symmetric(vertical: 10.0),
       child: TextFormField(
         controller: controller,
-        decoration: _inputDecoration(labelText: labelText, hintText: hintText, icon: icon),
+        decoration: _inputDecoration(
+          labelText: labelText,
+          hintText: hintText,
+          icon: icon,
+        ),
         maxLines: maxLines,
         keyboardType: keyboardType,
         inputFormatters: inputFormatters,
@@ -475,12 +545,13 @@ class _ProfilFormPageState extends State<ProfilFormPage> {
       padding: const EdgeInsets.symmetric(vertical: 10.0),
       child: DropdownButtonFormField<String>(
         value: value,
-        decoration: _inputDecoration(labelText: labelText, hintText: hintText, icon: icon),
+        decoration: _inputDecoration(
+          labelText: labelText,
+          hintText: hintText,
+          icon: icon,
+        ),
         items: items.map((String item) {
-          return DropdownMenuItem<String>(
-            value: item,
-            child: Text(item),
-          );
+          return DropdownMenuItem<String>(value: item, child: Text(item));
         }).toList(),
         onChanged: onChanged,
         validator: validator,

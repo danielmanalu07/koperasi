@@ -5,10 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart'; // For currency formatting
 import 'package:image_picker/image_picker.dart'; // Import for image picking
 import 'package:koperasi/core/utils/local_dataSource.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:url_launcher/url_launcher.dart'; // Import for launching URLs
-import 'package:koperasi/core/errors/map_failure_toMessage.dart'; // Assuming this path is correct
-import 'package:koperasi/features/riwayat_pembayaran/domain/usecases/create_bayar_tagihan_usecase.dart'; // Assuming this path is correct
+import 'package:url_launcher/url_launcher.dart'; // Import for launching URLs // Assuming this path is correct
 import 'package:koperasi/features/riwayat_pembayaran/presentation/bloc/bayar_tagihan/bayar_tagihan_event.dart'; // Assuming this path is correct
 import 'package:koperasi/features/riwayat_pembayaran/presentation/bloc/bayar_tagihan/bayar_tagihan_state.dart'; // Assuming this path is correct
 import 'package:koperasi/features/riwayat_pembayaran/presentation/bloc/bayar_tagihan/bayar_tagihan_bloc.dart'; // Assuming this path is correct
@@ -31,9 +28,7 @@ class BayarTagihanPage extends StatefulWidget {
 
 class _BayarTagihanPageState extends State<BayarTagihanPage> {
   final _formKey = GlobalKey<FormState>();
-  final ImagePicker _picker = ImagePicker();
-  String? _sessionToken;
-  late LocalDatasource _localDatasource; // Initialize this if used
+  final ImagePicker _picker = ImagePicker(); // Initialize this if used
 
   String? _selectedJenisPembayaran;
   final List<String> _jenisPembayaranOptions = ['Manual Transfer', 'Otomatis'];
@@ -47,52 +42,9 @@ class _BayarTagihanPageState extends State<BayarTagihanPage> {
 
   File? _pickedImageFile; // To store the picked image file
 
-  String? _selectedMetodeOtomatis;
-  final List<String> _metodeOotomatisOptions = [
-    'Virtual Account Bank',
-    'E-Wallet',
-  ];
-
-  String? _selectedBankVA;
-  final List<String> _bankVAOptions = [
-    'BCA Virtual Account',
-    'Mandiri Virtual Account',
-    'BNI Virtual Account',
-    'BRI Virtual Account',
-  ];
-  final Map<String, String> _bankVANumbers = {
-    'BCA Virtual Account': '8808 1234 5678 9012',
-    'Mandiri Virtual Account': '8950 8123 4567 8901',
-    'BNI Virtual Account': '9880 8123 4567 8902',
-    'BRI Virtual Account': '7770 8123 4567 8903',
-  };
-  String? _displayedVANumber;
-
-  String? _selectedEwallet;
-  final List<String> _ewalletOptions = [
-    'GoPay',
-    'OVO',
-    'Dana',
-    'ShopeePay',
-    'LinkAja',
-  ];
-  final Map<String, String> _ewalletNumbers = {
-    'GoPay': '0812 3456 7890 (a/n Koperasi)',
-    'OVO': '0898 7654 3210 (Koperasi Kita)',
-    'Dana': '0877 1122 3344 (Koperasi Maju)',
-    'ShopeePay': '0855 9988 7766 (Koperasi Jaya)',
-    'LinkAja': '0821 5544 3322 (Koperasi Sukses)',
-  };
-  String? _displayedEwalletNumber;
-
   @override
   void initState() {
     super.initState();
-    // Initialize _localDatasource if it's used elsewhere for token.
-    // Future.microtask(() async {
-    //   _localDatasource = LocalDatasource(await SharedPreferences.getInstance());
-    //   _sessionToken = await _localDatasource.getToken();
-    // });
   }
 
   String _formatCurrency(double amount) {
@@ -103,8 +55,6 @@ class _BayarTagihanPageState extends State<BayarTagihanPage> {
     );
     return formatter.format(amount);
   }
-
-  // --- REMOVED: _showImageSourceActionSheet as per previous request ---
 
   // Function to pick image from camera (still kept, but not directly called from main UI for now)
   Future<void> _pickImageFromCamera() async {
@@ -215,7 +165,7 @@ class _BayarTagihanPageState extends State<BayarTagihanPage> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                  'Pembayaran Tagihan berhasil: ${state.bayarEntity.amount}',
+                  'Pembayaran Tagihan berhasil: ${_formatCurrency(state.bayarEntity.amount.toDouble())}',
                 ),
                 duration: const Duration(seconds: 3),
                 backgroundColor: Colors.green,
@@ -229,6 +179,7 @@ class _BayarTagihanPageState extends State<BayarTagihanPage> {
               );
               launchUrl(url, mode: LaunchMode.externalApplication).catchError((
                 e,
+                stackTrace,
               ) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
@@ -302,11 +253,6 @@ class _BayarTagihanPageState extends State<BayarTagihanPage> {
                         _selectedRekeningTujuan = null;
                         _pickedImageFile =
                             null; // Reset image when type changes
-                        _selectedMetodeOtomatis = null;
-                        _selectedBankVA = null;
-                        _displayedVANumber = null;
-                        _selectedEwallet = null;
-                        _displayedEwalletNumber = null;
                       });
                     },
                     validator: (value) => value == null
@@ -372,77 +318,8 @@ class _BayarTagihanPageState extends State<BayarTagihanPage> {
                     const SizedBox(height: 20.0),
                   ],
 
-                  if (_selectedJenisPembayaran == 'Otomatis') ...[
-                    _buildDropdownFormField(
-                      value: _selectedMetodeOtomatis,
-                      hintText: 'Pilih Metode Pembayaran Otomatis',
-                      labelText: 'Metode Otomatis*',
-                      items: _metodeOotomatisOptions,
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedMetodeOtomatis = value;
-                          // Reset related selections if automatic method changes
-                          _selectedBankVA = null;
-                          _displayedVANumber = null;
-                          _selectedEwallet = null;
-                          _displayedEwalletNumber = null;
-                        });
-                      },
-                      validator: (value) => value == null
-                          ? 'Metode otomatis tidak boleh kosong'
-                          : null,
-                    ),
-                    const SizedBox(height: 20.0),
-                    if (_selectedMetodeOtomatis == 'Virtual Account Bank') ...[
-                      _buildDropdownFormField(
-                        value: _selectedBankVA,
-                        hintText: 'Pilih Bank Virtual Account',
-                        labelText: 'Bank VA*',
-                        items: _bankVAOptions,
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedBankVA = value;
-                            _displayedVANumber =
-                                _bankVANumbers[value]; // Display VA number
-                          });
-                        },
-                        validator: (value) =>
-                            value == null ? 'Bank VA tidak boleh kosong' : null,
-                      ),
-                      if (_displayedVANumber != null) ...[
-                        const SizedBox(height: 10.0),
-                        _buildInfoDisplay(
-                          'Nomor Virtual Account:',
-                          _displayedVANumber!,
-                        ),
-                      ],
-                    ],
-                    if (_selectedMetodeOtomatis == 'E-Wallet') ...[
-                      _buildDropdownFormField(
-                        value: _selectedEwallet,
-                        hintText: 'Pilih E-Wallet',
-                        labelText: 'E-Wallet*',
-                        items: _ewalletOptions,
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedEwallet = value;
-                            _displayedEwalletNumber =
-                                _ewalletNumbers[value]; // Display E-Wallet number
-                          });
-                        },
-                        validator: (value) => value == null
-                            ? 'E-Wallet tidak boleh kosong'
-                            : null,
-                      ),
-                      if (_displayedEwalletNumber != null) ...[
-                        const SizedBox(height: 10.0),
-                        _buildInfoDisplay(
-                          'Nomor E-Wallet Tujuan:',
-                          _displayedEwalletNumber!,
-                        ),
-                      ],
-                    ],
-                  ],
+                  // If "Otomatis" is selected, no additional dropdowns are shown.
+                  // The payment link will be launched after submission.
                   const SizedBox(height: 30.0),
 
                   // Pay Button
@@ -506,7 +383,8 @@ class _BayarTagihanPageState extends State<BayarTagihanPage> {
     );
   }
 
-  // Helper widget to display information (VA Number / E-Wallet)
+  // Helper widget to display information (VA Number / E-Wallet) - This is no longer used for "Otomatis"
+  // but kept for completeness if needed elsewhere or in future manual transfer enhancements.
   Widget _buildInfoDisplay(String label, String value) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),

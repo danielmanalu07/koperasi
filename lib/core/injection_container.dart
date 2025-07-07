@@ -3,14 +3,19 @@ import 'package:get_it/get_it.dart';
 import 'package:koperasi/core/networks/network_info.dart';
 import 'package:koperasi/core/utils/local_dataSource.dart';
 import 'package:koperasi/features/riwayat_pembayaran/data/datasources/bayar_remote_dataSource.dart';
+import 'package:koperasi/features/riwayat_pembayaran/data/datasources/pinjaman_remaining_remote_dataSource.dart';
 import 'package:koperasi/features/riwayat_pembayaran/data/datasources/riwayat_pemabayaran_remote_dataSource.dart';
 import 'package:koperasi/features/riwayat_pembayaran/data/repositories/bayar_repository_impl.dart';
+import 'package:koperasi/features/riwayat_pembayaran/data/repositories/pinjaman_remaining_repository_impl.dart';
 import 'package:koperasi/features/riwayat_pembayaran/data/repositories/riwayat_pembayaran_repository_impl.dart';
 import 'package:koperasi/features/riwayat_pembayaran/domain/repositories/bayar_repository.dart';
+import 'package:koperasi/features/riwayat_pembayaran/domain/repositories/pinjaman_remaining_repository.dart';
 import 'package:koperasi/features/riwayat_pembayaran/domain/repositories/riwayat_pembayaran_repository.dart';
 import 'package:koperasi/features/riwayat_pembayaran/domain/usecases/create_bayar_tagihan_usecase.dart';
+import 'package:koperasi/features/riwayat_pembayaran/domain/usecases/get_pinjaman_remaining_usecase.dart';
 import 'package:koperasi/features/riwayat_pembayaran/domain/usecases/get_riwayat_pembayaran_usecase.dart';
 import 'package:koperasi/features/riwayat_pembayaran/presentation/bloc/bayar_tagihan/bayar_tagihan_bloc.dart';
+import 'package:koperasi/features/riwayat_pembayaran/presentation/bloc/pinjaman_remaining/pinjaman_remaining_bloc.dart';
 import 'package:koperasi/features/riwayat_pembayaran/presentation/bloc/riwayat_pembayaran_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
@@ -23,10 +28,14 @@ void init() async {
     () => RiwayatPembayaranBloc(getRiwayatPembayaranUsecase: sl()),
   );
   sl.registerFactory(() => BayarTagihanBloc(createBayarTagihanUsecase: sl()));
+  sl.registerFactory(
+    () => PinjamanRemainingBloc(getPinjamanRemainingUsecase: sl()),
+  );
 
   //Usecase
   sl.registerLazySingleton(() => GetRiwayatPembayaranUsecase(sl()));
   sl.registerLazySingleton(() => CreateBayarTagihanUsecase(sl()));
+  sl.registerLazySingleton(() => GetPinjamanRemainingUsecase(sl()));
 
   //Repository
   sl.registerLazySingleton<RiwayatPembayaranRepository>(
@@ -43,6 +52,13 @@ void init() async {
       networkInfo: sl(),
     ),
   );
+  sl.registerLazySingleton<PinjamanRemainingRepository>(
+    () => PinjamanRemainingRepositoryImpl(
+      pinjamanRemainingRemoteDatasource: sl(),
+      localDatasource: sl(),
+      networkInfo: sl(),
+    ),
+  );
 
   //Remote Data Source
   sl.registerLazySingleton<RiwayatPemabayaranRemoteDatasource>(
@@ -50,6 +66,9 @@ void init() async {
   );
   sl.registerLazySingleton<BayarRemoteDatasource>(
     () => BayarRemoteDatasourceImpl(sl()),
+  );
+  sl.registerLazySingleton<PinjamanRemainingRemoteDatasource>(
+    () => PinjamanRemainingRemoteDatasourceImpl(sl()),
   );
 
   //Local Data Source
