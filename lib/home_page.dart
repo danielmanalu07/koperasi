@@ -5,9 +5,14 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:koperasi/core/routes/initial_routes.dart';
 import 'package:koperasi/core/utils/local_dataSource.dart';
 import 'package:koperasi/core/widgets/custom_flushbar.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:flutter_bloc/flutter_bloc.dart'; // Import flutter_bloc
+import 'package:koperasi/features/notifications/presentation/bloc/notification_bloc.dart'; // Import NotificationBloc
+import 'package:koperasi/features/notifications/presentation/bloc/notification_state.dart'; // Import NotificationState
+import 'package:koperasi/features/notifications/presentation/bloc/notification_event.dart'; // Import NotificationEvent
+import 'package:koperasi/core/constants/color_constant.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // Assuming ColorConstant is defined here
 
 class HomePage extends StatefulWidget {
   final String? token; // Token yang mungkin berasal dari GoRouter extra
@@ -52,6 +57,9 @@ class _HomePageState extends State<HomePage> {
   String? _sessionToken; // Token yang akan digunakan setelah load
   late LocalDatasource _localDatasource; // Inisialisasi LocalDatasource
 
+  // State untuk jumlah notifikasi belum dibaca
+  int _unreadNotificationCount = 0;
+
   @override
   void initState() {
     super.initState();
@@ -74,6 +82,8 @@ class _HomePageState extends State<HomePage> {
 
     if (_sessionToken != null) {
       _fetchUserData();
+      // Dispatch event to load notifications immediately after token is available
+      context.read<NotificationBloc>().add(GetNotificationEvent());
     } else {
       // Jika setelah mencoba semua, token masih null, berarti sesi tidak valid
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -271,11 +281,67 @@ class _HomePageState extends State<HomePage> {
         ),
         backgroundColor: const Color(0xFFE30031),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications, color: Colors.white),
-            tooltip: 'Notification',
-            onPressed: () {
-              context.push(InitialRoutes.notification);
+          // BlocBuilder for Notification Icon with Badge
+          BlocBuilder<NotificationBloc, NotificationState>(
+            builder: (context, state) {
+              int currentUnreadCount = 0;
+              if (state is NotificationLoaded) {
+                currentUnreadCount = state.notifications.length;
+              }
+
+              return Stack(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.notifications, color: Colors.white),
+                    tooltip: 'Notification',
+                    onPressed: () async {
+                      if (_sessionToken != null) {
+                        // Navigate to NotificationPage and await result to refresh count
+                        await context.push(InitialRoutes.notification);
+                        // After returning from NotificationPage, refresh notifications to update count
+                        if (mounted) {
+                          context.read<NotificationBloc>().add(
+                            GetNotificationEvent(),
+                          );
+                        }
+                      } else {
+                        CustomFlushbar.showTopFlashbar(
+                          context,
+                          'Token tidak tersedia. Silakan login kembali.',
+                          false,
+                        );
+                        _logoutUser(showFlushbar: false);
+                      }
+                    },
+                  ),
+                  if (currentUnreadCount > 0)
+                    Positioned(
+                      right: 5,
+                      top: 5,
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          color: Colors.redAccent,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.white, width: 1),
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 18,
+                          minHeight: 18,
+                        ),
+                        child: Text(
+                          '$currentUnreadCount',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              );
             },
           ),
           IconButton(
@@ -302,7 +368,7 @@ class _HomePageState extends State<HomePage> {
     final String formattedDate = _isDateFormatterInitialized
         ? DateFormat('dd MMMM', 'id_ID').format(
             DateTime.now(),
-          ) // Format yyyy dihapus jika tidak perlu tahun
+          ) // Format date without year
         : '...';
 
     return Container(
@@ -826,7 +892,6 @@ class _HomePageState extends State<HomePage> {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(15.0),
                       child: Stack(
-                        // <--- Ganti ClipRRect.child menjadi Stack
                         children: [
                           // Gambar (sebagai latar belakang)
                           Positioned.fill(
@@ -870,7 +935,6 @@ class _HomePageState extends State<HomePage> {
                           ),
                           // Teks Judul di Bawah
                           Align(
-                            // <--- Gunakan Align untuk menempatkan teks di bawah
                             alignment: Alignment.bottomCenter,
                             child: Padding(
                               padding: const EdgeInsets.symmetric(

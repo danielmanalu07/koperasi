@@ -4,8 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'dart:io'; // Import for File
-import 'package:image_picker/image_picker.dart'; // Import for ImagePicker
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 class TabunganFormPage extends StatefulWidget {
   final String token;
@@ -46,7 +46,6 @@ class _TabunganFormPageState extends State<TabunganFormPage> {
     'Mandiri - 0987654321 (Koperasi Makmur)',
   ];
 
-  // New state for transfer proof image
   File? _transferProofImageFile;
 
   @override
@@ -61,7 +60,8 @@ class _TabunganFormPageState extends State<TabunganFormPage> {
     final ImagePicker picker = ImagePicker();
     final XFile? pickedFile = await picker.pickImage(
       source: ImageSource.gallery,
-    ); // Or ImageSource.camera
+      imageQuality: 70, // Added for potential size reduction
+    );
 
     if (pickedFile != null) {
       setState(() {
@@ -104,7 +104,6 @@ class _TabunganFormPageState extends State<TabunganFormPage> {
       return;
     }
 
-    // Validate transfer proof image if manual transfer is selected
     if (_selectedJenisPembayaran == 'Manual Transfer' &&
         _transferProofImageFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -127,33 +126,41 @@ class _TabunganFormPageState extends State<TabunganFormPage> {
       type = 'manual';
     }
 
-    Map<String, dynamic> requestBody = {
-      "tabungan_category_id": _kategoriTabunganMap[_selectedKategoriTabungan],
-      "anggota_id": 6, // Placeholder
-      "description": _keteranganController.text,
-      "date": DateFormat('yyyy-MM-dd').format(DateTime.now()),
-      "nominal": int.tryParse(_nominalController.text) ?? 0,
-      "type": type,
-    };
-
-    if (_selectedJenisPembayaran == 'Manual Transfer' &&
-        _transferProofImageFile != null) {
-      String base64Image = base64Encode(
-        _transferProofImageFile!.readAsBytesSync(),
-      );
-      requestBody['image'] = base64Image;
-    }
-
     try {
-      final response = await http.post(
-        Uri.parse(apiUrl),
-        headers: {
-          'Content-Type': 'application/json; charset=UTF-8',
-          'Accept': 'application/json',
-          'Authorization': 'Bearer ${widget.token}',
-        },
-        body: jsonEncode(requestBody),
-      );
+      // Use MultipartRequest for file upload
+      var request = http.MultipartRequest('POST', Uri.parse(apiUrl));
+
+      // Add headers
+      request.headers.addAll({
+        'Accept': 'application/json',
+        'Authorization': 'Bearer ${widget.token}',
+      });
+
+      // Add form fields
+      request.fields['tabungan_category_id'] =
+          (_kategoriTabunganMap[_selectedKategoriTabungan]).toString();
+      request.fields['anggota_id'] =
+          '6'; // Placeholder, get from logged-in user
+      request.fields['description'] = _keteranganController.text;
+      request.fields['date'] = DateFormat('yyyy-MM-dd').format(DateTime.now());
+      request.fields['nominal'] = (int.tryParse(_nominalController.text) ?? 0)
+          .toString();
+      request.fields['type'] = type;
+
+      // Add image file if Manual Transfer is selected
+      if (_selectedJenisPembayaran == 'Manual Transfer' &&
+          _transferProofImageFile != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'image', // This must match the field name your API expects for the image file
+            _transferProofImageFile!.path,
+            // Optional: contentType to specify image type if known, e.g., MediaType('image', 'jpeg')
+          ),
+        );
+      }
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
 
       if (mounted) {
         final responseData = jsonDecode(response.body);
@@ -174,9 +181,8 @@ class _TabunganFormPageState extends State<TabunganFormPage> {
                   backgroundColor: Colors.blue,
                 ),
               );
-              // Langsung arahkan ke URL tanpa dialog konfirmasi
               await _launchURL(paymentUrl);
-              Navigator.pop(context, true); // Kembali & kirim sinyal refresh
+              Navigator.pop(context, true);
             } else {
               throw Exception(
                 'URL pembayaran tidak ditemukan pada respons API.',
@@ -192,16 +198,24 @@ class _TabunganFormPageState extends State<TabunganFormPage> {
                 backgroundColor: Colors.green,
               ),
             );
-            Navigator.pop(
-              context,
-              true,
-            ); // Kembali & kirim sinyal untuk refresh data
+            Navigator.pop(context, true);
           }
         } else {
           String errorMessage =
               responseData['message'] ?? 'Gagal menyimpan data.';
           if (responseData['errors'] != null && responseData['errors'] is Map) {
-            errorMessage = (responseData['errors'] as Map).values.first[0];
+            // Iterate through errors to get all messages
+            List<String> errorsList = [];
+            (responseData['errors'] as Map).forEach((key, value) {
+              if (value is List) {
+                errorsList.addAll(value.map((e) => e.toString()));
+              } else {
+                errorsList.add(value.toString());
+              }
+            });
+            errorMessage = errorsList.join(
+              '\n',
+            ); // Join multiple errors with newline
           }
           throw Exception(errorMessage);
         }
@@ -228,9 +242,7 @@ class _TabunganFormPageState extends State<TabunganFormPage> {
       appBar: AppBar(
         title: const Text(
           'Form Tambah Tabungan',
-          style: TextStyle(
-            color: Colors.white, // Mengubah warna teks judul menjadi putih
-          ),
+          style: TextStyle(color: Colors.white),
         ),
         backgroundColor: const Color(0xFFE30031),
       ),
@@ -302,7 +314,6 @@ class _TabunganFormPageState extends State<TabunganFormPage> {
                 onChanged: (value) {
                   setState(() {
                     _selectedJenisPembayaran = value;
-                    // Reset selected rekening and image when payment type changes
                     _selectedRekeningTujuan = null;
                     _transferProofImageFile = null;
                   });
@@ -312,8 +323,6 @@ class _TabunganFormPageState extends State<TabunganFormPage> {
                     : null,
               ),
               const SizedBox(height: 20.0),
-
-              // Conditional display for Manual Transfer specific fields
               if (_selectedJenisPembayaran == 'Manual Transfer') ...[
                 _buildDropdownFormField(
                   value: _selectedRekeningTujuan,
@@ -330,7 +339,6 @@ class _TabunganFormPageState extends State<TabunganFormPage> {
                       : null,
                 ),
                 const SizedBox(height: 20.0),
-                // Transfer Proof Image Section
                 Container(
                   height: 150,
                   width: double.infinity,
@@ -347,9 +355,7 @@ class _TabunganFormPageState extends State<TabunganFormPage> {
                           ),
                         )
                       : ClipRRect(
-                          borderRadius: BorderRadius.circular(
-                            7.5,
-                          ), // Slightly smaller for inner clip
+                          borderRadius: BorderRadius.circular(7.5),
                           child: Image.file(
                             _transferProofImageFile!,
                             fit: BoxFit.cover,
@@ -371,9 +377,7 @@ class _TabunganFormPageState extends State<TabunganFormPage> {
                   ),
                 ),
               ],
-
               const SizedBox(height: 30.0),
-
               _isSaving
                   ? const Center(child: CircularProgressIndicator())
                   : ElevatedButton(

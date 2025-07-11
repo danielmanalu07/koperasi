@@ -19,9 +19,7 @@ class RiwayatPembayaranBloc
     Emitter<RiwayatPembayaranState> emit,
   ) async {
     emit(RiwayatPembayaranLoading());
-    final riwayatPembayaran = await getRiwayatPembayaranUsecase(
-      GetRiwayatPembayaranParams(event.pinjamanDetail),
-    );
+    final riwayatPembayaran = await getRiwayatPembayaranUsecase(NoParams());
     riwayatPembayaran.fold(
       (failure) =>
           emit(RiwayatPembayaranError(MapFailureToMessage.map(failure))),

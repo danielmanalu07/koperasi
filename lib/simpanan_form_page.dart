@@ -3,12 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart'; // Import url_launcher
-import 'dart:io'; // Import for File
-import 'package:image_picker/image_picker.dart'; // Import for ImagePicker
+import 'package:url_launcher/url_launcher.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 class SimpananFormPage extends StatefulWidget {
-  final String token; // Token sekarang dibutuhkan untuk otorisasi
+  final String token;
 
   const SimpananFormPage({super.key, required this.token});
 
@@ -20,7 +20,6 @@ class _SimpananFormPageState extends State<SimpananFormPage> {
   final _formKey = GlobalKey<FormState>();
   bool _isSaving = false;
 
-  // Mapping kategori simpanan ke ID sesuai API
   final Map<String, int> _kategoriSimpananMap = {
     'Simpanan Pokok': 1,
     'Simpanan Wajib': 2,
@@ -39,7 +38,6 @@ class _SimpananFormPageState extends State<SimpananFormPage> {
   String? _selectedJenisPembayaran;
   final List<String> _jenisPembayaranOptions = ['Manual Transfer', 'Otomatis'];
 
-  // Data untuk pembayaran manual
   String? _selectedRekeningTujuan;
   final List<String> _rekeningTujuanOptions = [
     'BCA - 123456789 (Koperasi Sejahtera)',
@@ -47,7 +45,6 @@ class _SimpananFormPageState extends State<SimpananFormPage> {
     'BNI - 1122334455 (Koperasi Bersama)',
   ];
 
-  // New state for transfer proof image
   File? _transferProofImageFile;
 
   @override
@@ -57,14 +54,16 @@ class _SimpananFormPageState extends State<SimpananFormPage> {
     super.dispose();
   }
 
-  // Function to pick image from gallery or camera
   Future<void> _pickImage() async {
     final ImagePicker picker = ImagePicker();
     final XFile? pickedFile = await picker.pickImage(
       source: ImageSource.gallery,
-    ); // Or ImageSource.camera
+      imageQuality: 70, // Compress image quality to reduce size
+    );
 
     if (pickedFile != null) {
+      // You can also compress the image further if needed before setting the state
+      // For example, using the 'flutter_image_compress' package
       setState(() {
         _transferProofImageFile = File(pickedFile.path);
       });
@@ -80,7 +79,6 @@ class _SimpananFormPageState extends State<SimpananFormPage> {
     }
   }
 
-  // Fungsi untuk membuka URL di browser eksternal
   Future<void> _launchURL(String url) async {
     final Uri uri = Uri.parse(url);
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
@@ -106,7 +104,6 @@ class _SimpananFormPageState extends State<SimpananFormPage> {
       return;
     }
 
-    // Validate transfer proof image if manual transfer is selected
     if (_selectedJenisPembayaran == 'Manual Transfer' &&
         _transferProofImageFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -129,42 +126,41 @@ class _SimpananFormPageState extends State<SimpananFormPage> {
       type = 'manual';
     }
 
-    // --- IMPORTANT: For actual file upload, you'll likely need to use MultipartRequest ---
-    // The current approach of sending Base64 in JSON might not be supported by your API
-    // if it expects a file upload. Below is a simplified example for the JSON body.
-
-    Map<String, dynamic> requestBody = {
-      "simpanan_category_id": _kategoriSimpananMap[_selectedKategoriSimpanan],
-      "anggota_id":
-          6, // Placeholder, idealnya ini didapat dari data user yang login
-      "description": _keteranganController.text,
-      "date": DateFormat('yyyy-MM-dd').format(DateTime.now()),
-      "nominal": int.tryParse(_nominalController.text) ?? 0,
-      "type": type,
-    };
-
-    if (_selectedJenisPembayaran == 'Manual Transfer' &&
-        _transferProofImageFile != null) {
-      // Convert image to Base64 string
-      String base64Image = base64Encode(
-        _transferProofImageFile!.readAsBytesSync(),
-      );
-      // Assuming your API expects a base64 string for the image
-      requestBody['image'] = base64Image;
-      // You might also need to send the file extension or MIME type
-      // requestBody['transfer_proof_image_extension'] = _transferProofImageFile!.path.split('.').last;
-    }
-
     try {
-      final response = await http.post(
-        Uri.parse(apiUrl),
-        headers: {
-          'Content-Type': 'application/json; charset=UTF-8',
-          'Accept': 'application/json',
-          'Authorization': 'Bearer ${widget.token}',
-        },
-        body: jsonEncode(requestBody),
-      );
+      // Use MultipartRequest for file upload
+      var request = http.MultipartRequest('POST', Uri.parse(apiUrl));
+
+      // Add headers
+      request.headers.addAll({
+        'Accept': 'application/json',
+        'Authorization': 'Bearer ${widget.token}',
+      });
+
+      // Add form fields
+      request.fields['simpanan_category_id'] =
+          (_kategoriSimpananMap[_selectedKategoriSimpanan]).toString();
+      request.fields['anggota_id'] =
+          '6'; // Placeholder, get from logged-in user
+      request.fields['description'] = _keteranganController.text;
+      request.fields['date'] = DateFormat('yyyy-MM-dd').format(DateTime.now());
+      request.fields['nominal'] = (int.tryParse(_nominalController.text) ?? 0)
+          .toString();
+      request.fields['type'] = type;
+
+      // Add image file if Manual Transfer is selected
+      if (_selectedJenisPembayaran == 'Manual Transfer' &&
+          _transferProofImageFile != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'image', // This is the field name your API expects for the image file
+            _transferProofImageFile!.path,
+            // Optional: contentType to specify image type if known, e.g., MediaType('image', 'jpeg')
+          ),
+        );
+      }
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
 
       if (mounted) {
         final responseData = jsonDecode(response.body);
@@ -186,14 +182,13 @@ class _SimpananFormPageState extends State<SimpananFormPage> {
                 ),
               );
               await _launchURL(paymentUrl);
-              Navigator.pop(context, true); // Kembali & kirim sinyal refresh
+              Navigator.pop(context, true);
             } else {
               throw Exception(
                 'URL pembayaran tidak ditemukan pada respons API.',
               );
             }
           } else {
-            // For 'Manual Transfer'
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text(
@@ -202,16 +197,24 @@ class _SimpananFormPageState extends State<SimpananFormPage> {
                 backgroundColor: Colors.green,
               ),
             );
-            Navigator.pop(
-              context,
-              true,
-            ); // Kembali & kirim sinyal untuk refresh data
+            Navigator.pop(context, true);
           }
         } else {
           String errorMessage =
               responseData['message'] ?? 'Gagal menyimpan data.';
           if (responseData['errors'] != null && responseData['errors'] is Map) {
-            errorMessage = (responseData['errors'] as Map).values.first[0];
+            // Iterate through errors to get all messages
+            List<String> errorsList = [];
+            (responseData['errors'] as Map).forEach((key, value) {
+              if (value is List) {
+                errorsList.addAll(value.map((e) => e.toString()));
+              } else {
+                errorsList.add(value.toString());
+              }
+            });
+            errorMessage = errorsList.join(
+              '\n',
+            ); // Join multiple errors with newline
           }
           throw Exception(errorMessage);
         }
@@ -312,7 +315,6 @@ class _SimpananFormPageState extends State<SimpananFormPage> {
                 onChanged: (value) {
                   setState(() {
                     _selectedJenisPembayaran = value;
-                    // Reset selected rekening and image when payment type changes
                     _selectedRekeningTujuan = null;
                     _transferProofImageFile = null;
                   });
@@ -322,8 +324,6 @@ class _SimpananFormPageState extends State<SimpananFormPage> {
                     : null,
               ),
               const SizedBox(height: 20.0),
-
-              // Conditional display for Manual Transfer specific fields
               if (_selectedJenisPembayaran == 'Manual Transfer') ...[
                 _buildDropdownFormField(
                   value: _selectedRekeningTujuan,
@@ -340,7 +340,6 @@ class _SimpananFormPageState extends State<SimpananFormPage> {
                       : null,
                 ),
                 const SizedBox(height: 20.0),
-                // Transfer Proof Image Section
                 Container(
                   height: 150,
                   width: double.infinity,
@@ -357,9 +356,7 @@ class _SimpananFormPageState extends State<SimpananFormPage> {
                           ),
                         )
                       : ClipRRect(
-                          borderRadius: BorderRadius.circular(
-                            7.5,
-                          ), // Slightly smaller for inner clip
+                          borderRadius: BorderRadius.circular(7.5),
                           child: Image.file(
                             _transferProofImageFile!,
                             fit: BoxFit.cover,
@@ -381,9 +378,7 @@ class _SimpananFormPageState extends State<SimpananFormPage> {
                   ),
                 ),
               ],
-
               const SizedBox(height: 30.0),
-
               _isSaving
                   ? const Center(child: CircularProgressIndicator())
                   : ElevatedButton(

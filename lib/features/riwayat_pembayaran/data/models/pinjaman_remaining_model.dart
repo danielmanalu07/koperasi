@@ -7,9 +7,16 @@ class PinjamanRemainingModel extends PinjamanRemainingEntity {
   });
 
   factory PinjamanRemainingModel.fromJson(Map<String, dynamic> json) {
+    final num parsedRemainingTotal = json['remaining_total'] is String
+        ? (double.tryParse(json['remaining_total']) ?? 0.0)
+        : (json['remaining_total'] ?? 0.0);
+    final num parsedRemainingTotalThisMonth =
+        json['remaining_total_this_month'] is String
+        ? (double.tryParse(json['remaining_total_this_month']) ?? 0.0)
+        : (json['remaining_total_this_month'] ?? 0.0);
     return PinjamanRemainingModel(
-      remainingTotal: num.parse(json['remaining_total']),
-      remainingTotalThisMonth: num.parse(json['remaining_total_this_month']),
+      remainingTotal: parsedRemainingTotal,
+      remainingTotalThisMonth: parsedRemainingTotalThisMonth,
     );
   }
 }

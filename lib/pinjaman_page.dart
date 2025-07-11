@@ -85,8 +85,7 @@ class _PinjamanPageState extends State<PinjamanPage>
   double _totalSisaPinjaman =
       0; // Still used for display from fetchPinjamanData
   // Removed: double _pinjamanBulanIni = 0; // No longer needed as state variable
-  int?
-  _activePinjamanDetailId; // To store the ID of the active loan for payment
+  // To store the ID of the active loan for payment
   List<RiwayatPinjaman> _listRiwayatPinjaman = [];
   bool get _memilikiPinjamanAktif => _totalSisaPinjaman > 0;
 
@@ -110,11 +109,7 @@ class _PinjamanPageState extends State<PinjamanPage>
       context.read<PinjamanRemainingBloc>().add(
         GetPinjamanRemainingEvent(), // Request remaining total
       );
-      if (_activePinjamanDetailId != null) {
-        context.read<RiwayatPembayaranBloc>().add(
-          GetRiwayatPembayaranEvent(pinjamanDetail: _activePinjamanDetailId!),
-        );
-      }
+      context.read<RiwayatPembayaranBloc>().add(GetRiwayatPembayaranEvent());
     } catch (e) {
       debugPrint('Refresh failed with error: $e');
       if (mounted) {
@@ -154,24 +149,11 @@ class _PinjamanPageState extends State<PinjamanPage>
                 .toList();
 
             double totalSisa = 0;
-            // Removed: double tagihanBulanIni = 0; // No longer calculated here
-            int? activeLoanId;
-
-            for (var pinjaman in pinjamanList) {
-              if (pinjaman.statusPinjaman == 'Aktif') {
-                totalSisa += pinjaman.nominalPinjaman;
-                // Removed: tagihanBulanIni += pinjaman.angsuranPerBulan; // No longer calculated here
-                if (activeLoanId == null) {
-                  activeLoanId = pinjaman.id;
-                }
-              }
-            }
 
             setState(() {
               _listRiwayatPinjaman = pinjamanList;
               _totalSisaPinjaman = totalSisa;
               // Removed: _pinjamanBulanIni = tagihanBulanIni; // No longer updated here
-              _activePinjamanDetailId = activeLoanId;
             });
           } else {
             throw Exception(responseData['message'] ?? 'Invalid data format');
@@ -197,17 +179,7 @@ class _PinjamanPageState extends State<PinjamanPage>
   // Calls the bloc to fetch payment history
   Future<void> _fetchRiwayatPembayaranData() async {
     // Only dispatch if _activePinjamanDetailId is available
-    if (_activePinjamanDetailId != null) {
-      context.read<RiwayatPembayaranBloc>().add(
-        GetRiwayatPembayaranEvent(pinjamanDetail: _activePinjamanDetailId!),
-      );
-    } else {
-      debugPrint(
-        "No active loan ID found, skipping RiwayatPembayaranBloc event.",
-      );
-      // Optionally, clear RiwayatPembayaranBloc state if no active loan
-      // context.read<RiwayatPembayaranBloc>().add(ClearRiwayatPembayaranEvent());
-    }
+    context.read<RiwayatPembayaranBloc>().add(GetRiwayatPembayaranEvent());
   }
 
   @override
@@ -572,13 +544,8 @@ class _PinjamanPageState extends State<PinjamanPage>
       body: BlocListener<PinjamanRemainingBloc, PinjamanRemainingState>(
         listener: (context, state) {
           if (state is PinjamanRemainingLoaded) {
-            // Data is loaded, now ensure _fetchRiwayatPembayaranData is called
-            // This is handled in _refresh() now, but can be a safeguard
-            // if (state.pinjamanRemainingEntity.remainingTotal > 0 && _activePinjamanDetailId != null) {
-            //   _fetchRiwayatPembayaranData();
-            // }
+            _fetchRiwayatPembayaranData();
           } else if (state is PinjamanRemainingError) {
-            // Handle error, maybe show a SnackBar or update UI
             debugPrint("Error in PinjamanRemainingBloc: ${state.message}");
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -672,7 +639,7 @@ class _PinjamanPageState extends State<PinjamanPage>
                       Text(
                         _formatCurrency(
                           totalSisaPinjaman,
-                        ), // Using total from Bloc
+                        ).toString(), // Using total from Bloc
                         style: TextStyle(
                           fontSize: 18.0,
                           fontWeight: FontWeight.bold,
@@ -692,7 +659,7 @@ class _PinjamanPageState extends State<PinjamanPage>
                       Text(
                         _formatCurrency(
                           tagihanBulanIni,
-                        ), // Using tagihanBulanIni from Bloc
+                        ).toString(), // Using tagihanBulanIni from Bloc
                         style: TextStyle(
                           fontSize: 18.0,
                           fontWeight: FontWeight.bold,
@@ -703,35 +670,72 @@ class _PinjamanPageState extends State<PinjamanPage>
                       ),
                     ],
                   ),
-                  // Only show action buttons if there's an active loan or a current month's bill
-                  if (totalSisaPinjaman > 0 || tagihanBulanIni > 0) ...[
-                    // Use Bloc data for condition
-                    const SizedBox(height: 20.0),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
+                  const SizedBox(height: 20.0),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    PinjamanFormPage(token: widget.token!),
+                              ),
+                            ).then((value) {
+                              if (value == true) _refresh(); // Refresh all data
+                            });
+                          },
+                          icon: const Icon(Icons.add_card),
+                          label: const Text('Ajukan'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: const Color(0xFFE30031),
+                            side: const BorderSide(
+                              color: Color(0xFFE30031),
+                              width: 1.5,
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 12.0),
+                            textStyle: const TextStyle(
+                              fontSize: 14.0,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10.0),
+                            ),
+                          ),
+                        ),
+                      ),
+                      // Show 'Bayar' button only if there's a bill for this month
+                      if (tagihanBulanIni > 0) ...[
+                        const SizedBox(width: 10),
                         Expanded(
-                          child: OutlinedButton.icon(
+                          child: ElevatedButton.icon(
                             onPressed: () {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) =>
-                                      PinjamanFormPage(token: widget.token!),
+                                  builder: (context) => BayarTagihanPage(
+                                    tagihanBulanIni: tagihanBulanIni
+                                        .toDouble(), // Pass tagihanBulanIni from Bloc state
+                                    pinjamanDetailId: state
+                                        .pinjamanRemainingEntity
+                                        .remainingTotal
+                                        .toInt(), // Pass the ID
+                                    token: widget.token!, // Pass the token
+                                  ),
                                 ),
                               ).then((value) {
-                                if (value == true)
-                                  _refresh(); // Refresh all data
+                                if (value == true) {
+                                  _refresh(); // Refresh data after payment
+                                }
                               });
                             },
-                            icon: const Icon(Icons.add_card),
-                            label: const Text('Ajukan'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: const Color(0xFFE30031),
-                              side: const BorderSide(
-                                color: Color(0xFFE30031),
-                                width: 1.5,
-                              ),
+                            icon: const Icon(Icons.payment),
+                            label: const Text('Bayar'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red.shade600,
+                              foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(
                                 vertical: 12.0,
                               ),
@@ -745,52 +749,9 @@ class _PinjamanPageState extends State<PinjamanPage>
                             ),
                           ),
                         ),
-                        // Show 'Bayar' button only if there's a bill for this month AND an active loan ID
-                        if (tagihanBulanIni > 0 &&
-                            _activePinjamanDetailId != null) ...[
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => BayarTagihanPage(
-                                      tagihanBulanIni: tagihanBulanIni
-                                          .toDouble(), // Pass tagihanBulanIni from Bloc state
-                                      pinjamanDetailId:
-                                          _activePinjamanDetailId!, // Pass the ID
-                                      token: widget.token!, // Pass the token
-                                    ),
-                                  ),
-                                ).then((value) {
-                                  if (value == true) {
-                                    _refresh(); // Refresh data after payment
-                                  }
-                                });
-                              },
-                              icon: const Icon(Icons.payment),
-                              label: const Text('Bayar'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.red.shade600,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 12.0,
-                                ),
-                                textStyle: const TextStyle(
-                                  fontSize: 14.0,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10.0),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
                       ],
-                    ),
-                  ],
+                    ],
+                  ),
                 ],
               );
             } else if (state is PinjamanRemainingError) {
@@ -848,7 +809,7 @@ class _PinjamanPageState extends State<PinjamanPage>
           );
           for (var item in state.riwayatPembayaran) {
             debugPrint(
-              '   - ID: ${item.id}, Amount: ${item.amount}, Type: ${item.type}, Created: ${item.createdAt}, Status: ${item.status}, Transaction: ${item.transaction != null ? item.transaction!.id : 'N/A'}, Transaction Status: ${item.transaction?.status ?? 'N/A'}, PaidAt: ${item.transaction?.paidAt ?? 'N/A'}, PaymentLink: ${item.transaction?.paymentLink ?? 'N/A'}',
+              '    - ID: ${item.id}, Amount: ${item.amount}, Type: ${item.type}, Created: ${item.createdAt}, Status: ${item.status}, Transaction: ${item.transaction != null ? item.transaction!.id : 'N/A'}, Transaction Status: ${item.transaction?.status ?? 'N/A'}, PaidAt: ${item.transaction?.paidAt ?? 'N/A'}, PaymentLink: ${item.transaction?.paymentLink ?? 'N/A'}',
             );
           }
           if (state.riwayatPembayaran.isEmpty) {
@@ -862,29 +823,24 @@ class _PinjamanPageState extends State<PinjamanPage>
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 16.0),
-                  // Only show refresh button if activePinjamanDetailId is known
-                  if (_activePinjamanDetailId != null)
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        context.read<RiwayatPembayaranBloc>().add(
-                          GetRiwayatPembayaranEvent(
-                            pinjamanDetail: _activePinjamanDetailId!,
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Refresh'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: ColorConstant.foregroundColor,
-                        foregroundColor: ColorConstant.whiteColor,
-                      ),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      context.read<RiwayatPembayaranBloc>().add(
+                        GetRiwayatPembayaranEvent(),
+                      );
+                    },
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Refresh'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: ColorConstant.foregroundColor,
+                      foregroundColor: ColorConstant.whiteColor,
                     ),
-                  if (_activePinjamanDetailId == null)
-                    const Text(
-                      'Pastikan Anda memiliki pinjaman aktif untuk melihat riwayat pembayaran.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 14, color: Colors.grey),
-                    ),
+                  ),
+                  const Text(
+                    'Pastikan Anda memiliki pinjaman aktif untuk melihat riwayat pembayaran.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 14, color: Colors.grey),
+                  ),
                 ],
               ),
             );
@@ -970,29 +926,24 @@ class _PinjamanPageState extends State<PinjamanPage>
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16.0),
-                // Only show refresh button if activePinjamanDetailId is known
-                if (_activePinjamanDetailId != null)
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      context.read<RiwayatPembayaranBloc>().add(
-                        GetRiwayatPembayaranEvent(
-                          pinjamanDetail: _activePinjamanDetailId!,
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Refresh'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: ColorConstant.foregroundColor,
-                      foregroundColor: ColorConstant.whiteColor,
-                    ),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    context.read<RiwayatPembayaranBloc>().add(
+                      GetRiwayatPembayaranEvent(),
+                    );
+                  },
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Refresh'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: ColorConstant.foregroundColor,
+                    foregroundColor: ColorConstant.whiteColor,
                   ),
-                if (_activePinjamanDetailId == null)
-                  const Text(
-                    'Pastikan Anda memiliki pinjaman aktif untuk melihat riwayat pembayaran.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 14, color: Colors.grey),
-                  ),
+                ),
+                const Text(
+                  'Pastikan Anda memiliki pinjaman aktif untuk melihat riwayat pembayaran.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                ),
               ],
             ),
           );

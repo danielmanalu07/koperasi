@@ -2,6 +2,11 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:get_it/get_it.dart';
 import 'package:koperasi/core/networks/network_info.dart';
 import 'package:koperasi/core/utils/local_dataSource.dart';
+import 'package:koperasi/features/notifications/data/dataSources/notification_remote_dataSource.dart';
+import 'package:koperasi/features/notifications/data/repositories/notification_repository_impl.dart';
+import 'package:koperasi/features/notifications/domain/repositories/notification_repository.dart';
+import 'package:koperasi/features/notifications/domain/usecases/get_notification_usecase.dart';
+import 'package:koperasi/features/notifications/presentation/bloc/notification_bloc.dart';
 import 'package:koperasi/features/riwayat_pembayaran/data/datasources/bayar_remote_dataSource.dart';
 import 'package:koperasi/features/riwayat_pembayaran/data/datasources/pinjaman_remaining_remote_dataSource.dart';
 import 'package:koperasi/features/riwayat_pembayaran/data/datasources/riwayat_pemabayaran_remote_dataSource.dart';
@@ -31,11 +36,13 @@ void init() async {
   sl.registerFactory(
     () => PinjamanRemainingBloc(getPinjamanRemainingUsecase: sl()),
   );
+  sl.registerFactory(() => NotificationBloc(getNotificationUsecase: sl()));
 
   //Usecase
   sl.registerLazySingleton(() => GetRiwayatPembayaranUsecase(sl()));
   sl.registerLazySingleton(() => CreateBayarTagihanUsecase(sl()));
   sl.registerLazySingleton(() => GetPinjamanRemainingUsecase(sl()));
+  sl.registerLazySingleton(() => GetNotificationUsecase(sl()));
 
   //Repository
   sl.registerLazySingleton<RiwayatPembayaranRepository>(
@@ -59,6 +66,13 @@ void init() async {
       networkInfo: sl(),
     ),
   );
+  sl.registerLazySingleton<NotificationRepository>(
+    () => NotificationRepositoryImpl(
+      notificationRemoteDatasource: sl(),
+      localDatasource: sl(),
+      networkInfo: sl(),
+    ),
+  );
 
   //Remote Data Source
   sl.registerLazySingleton<RiwayatPemabayaranRemoteDatasource>(
@@ -69,6 +83,9 @@ void init() async {
   );
   sl.registerLazySingleton<PinjamanRemainingRemoteDatasource>(
     () => PinjamanRemainingRemoteDatasourceImpl(sl()),
+  );
+  sl.registerLazySingleton<NotificationRemoteDatasource>(
+    () => NotificationRemoteDatasourceImpl(sl()),
   );
 
   //Local Data Source

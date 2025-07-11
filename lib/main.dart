@@ -7,6 +7,8 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:koperasi/core/routes/app_routes.dart';
 import 'package:koperasi/core/routes/initial_routes.dart';
 import 'package:koperasi/core/utils/local_dataSource.dart';
+import 'package:koperasi/features/notifications/presentation/bloc/notification_bloc.dart';
+import 'package:koperasi/features/notifications/presentation/bloc/notification_event.dart';
 import 'package:koperasi/features/riwayat_pembayaran/presentation/bloc/bayar_tagihan/bayar_tagihan_bloc.dart';
 import 'package:koperasi/features/riwayat_pembayaran/presentation/bloc/bayar_tagihan/bayar_tagihan_event.dart';
 import 'package:koperasi/features/riwayat_pembayaran/presentation/bloc/pinjaman_remaining/pinjaman_remaining_bloc.dart';
@@ -82,7 +84,8 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider<RiwayatPembayaranBloc>(
-          create: (_) => di.sl<RiwayatPembayaranBloc>(),
+          create: (_) =>
+              di.sl<RiwayatPembayaranBloc>()..add(GetRiwayatPembayaranEvent()),
         ),
         BlocProvider<BayarTagihanBloc>(
           create: (_) => di.sl<BayarTagihanBloc>(),
@@ -90,6 +93,9 @@ class MyApp extends StatelessWidget {
         BlocProvider<PinjamanRemainingBloc>(
           create: (_) =>
               di.sl<PinjamanRemainingBloc>()..add(GetPinjamanRemainingEvent()),
+        ),
+        BlocProvider<NotificationBloc>(
+          create: (_) => di.sl<NotificationBloc>()..add(GetNotificationEvent()),
         ),
       ],
       child: MaterialApp.router(
