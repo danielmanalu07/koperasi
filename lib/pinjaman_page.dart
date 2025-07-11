@@ -716,12 +716,15 @@ class _PinjamanPageState extends State<PinjamanPage>
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => BayarTagihanPage(
-                                    tagihanBulanIni: tagihanBulanIni
+                                    tagihanBulanIni: state
+                                        .pinjamanRemainingEntity
+                                        .activeThisMonthEntity!
+                                        .remaining
                                         .toDouble(), // Pass tagihanBulanIni from Bloc state
                                     pinjamanDetailId: state
                                         .pinjamanRemainingEntity
-                                        .remainingTotal
-                                        .toInt(), // Pass the ID
+                                        .activeThisMonthEntity!
+                                        .id, // Pass the ID
                                     token: widget.token!, // Pass the token
                                   ),
                                 ),
