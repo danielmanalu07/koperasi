@@ -1,0 +1,444 @@
+{
+  "uuid": "31ecf6b3-d8b0-4bca-8b5d-71de2f339f59",
+  "lastMigration": 33,
+  "name": "Mockapi",
+  "endpointPrefix": "",
+  "latency": 0,
+  "port": 3001,
+  "hostname": "",
+  "folders": [],
+  "routes": [
+    {
+      "uuid": "9d5281a0-fe1f-437e-84ee-c516923179ed",
+      "type": "http",
+      "documentation": "",
+      "method": "get",
+      "endpoint": "api/sewa/dashboard",
+      "responses": [
+        {
+          "uuid": "40544eb3-0ba3-45c7-8574-0187ca16c83e",
+          "body": "{\n  \"status\" : 200,\n  \"message\" : \"success\",\n  \"data\" : {\n    \"total_saldo\": 32000000,\n    \"total_pemasukan\": 50000000,\n    \"total_pengeluaran\": 18000000,\n    \"total_aset\": 85000000,\n    \"monthly_summary\": [\n      {\n        \"month\": \"Januari\",\n        \"pemasukan\": 8000000,\n        \"pengeluaran\": 3000000\n      },\n      {\n        \"month\": \"Februari\",\n        \"pemasukan\": 7000000,\n        \"pengeluaran\": 4000000\n      },\n      {\n        \"month\": \"Maret\",\n        \"pemasukan\": 10000000,\n        \"pengeluaran\": 5000000\n      }\n    ]\n  }\n}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    },
+    {
+      "uuid": "711c5d54-b8b3-4a2a-b1b7-73319ed56215",
+      "type": "http",
+      "documentation": "",
+      "method": "get",
+      "endpoint": "api/sewa/aset",
+      "responses": [
+        {
+          "uuid": "cbb7369e-4750-42fe-a465-0bd957c303d1",
+          "body": "{\n  \"status\" : 200,\n  \"message\" : \"Success\",\n  \"data\" : [\n    {\n      \"id\": 1,\n      \"nama\": \"Mobil Avanza 2020\",\n      \"tanggal_beli\": \"2023-01-12\",\n      \"harga_beli\": 150000000,\n      \"status\": \"Aktif\",\n      \"keterangan\": \"Mobil putih untuk sewa keluarga Mobil putih untuk sewa keluarga Mobil putih untuk sewa keluarga\"\n    },\n    {\n      \"id\": 2,\n      \"nama\": \"Genset 3000W\",\n      \"tanggal_beli\": \"2022-10-01\",\n      \"harga_beli\": 7500000,\n      \"status\": \"Aktif\",\n      \"keterangan\": \"Sudah dijual bulan lalu Sudah dijual bulan lalu Sudah dijual bulan lalu\"\n    }\n  ]\n}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    },
+    {
+      "uuid": "5658118f-c1d6-4c07-a5e6-6e5a9be68bd7",
+      "type": "http",
+      "documentation": "",
+      "method": "post",
+      "endpoint": "api/sewa/aset/create",
+      "responses": [
+        {
+          "uuid": "43d90d5f-11b1-4472-aeed-833db30017f9",
+          "body": "{\n  \"status\" : 200,\n  \"message\" : \"created\",\n  \"data\" : {\n    \"id\": 1,\n    \"nama\": \"Mobil Innova 2021\",\n    \"tanggal_beli\": \"2023-09-01\",\n    \"harga_beli\": 170000000,\n    \"keterangan\": \"MPV premium\",\n    \"status\" : \"aktif\"\n  }\n}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    },
+    {
+      "uuid": "edcc29fe-d9d6-49d9-a2b2-7f2b257e2260",
+      "type": "http",
+      "documentation": "",
+      "method": "get",
+      "endpoint": "api/sewa/pengeluaran",
+      "responses": [
+        {
+          "uuid": "77da3667-37ee-4d52-8c6e-3ac69f9697e2",
+          "body": "{\n  \"status\" : 200,\n  \"message\" : \"success\",\n  \"data\" : [\n    {\n      \"id\": 1,\n      \"tanggal\": \"2024-01-01\",\n      \"kategori\": \"Gaji Karyawan\",\n      \"jumlah\": 2500000,\n      \"keterangan\": \"Gaji sopir bulan Januari\"\n    },\n    {\n      \"id\": 2,\n      \"tanggal\": \"2024-01-01\",\n      \"kategori\": \"Peralatan\",\n      \"jumlah\": 2500000,\n      \"keterangan\": \"Membeli Peralatan Untuk Operasional Bisnis\"\n    },\n    {\n      \"id\": 3,\n      \"tanggal\": \"2024-01-01\",\n      \"kategori\": \"Internet\",\n      \"jumlah\": 2500000,\n      \"keterangan\": \"Biaya Bulanan Wifi Internet\"\n    }\n  ]\n}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    },
+    {
+      "uuid": "a20593a9-857f-49e0-b482-6cfab6221607",
+      "type": "http",
+      "documentation": "",
+      "method": "post",
+      "endpoint": "api/sewa/pengeluaran/create",
+      "responses": [
+        {
+          "uuid": "0a5dd07c-b348-48c4-9f45-f31f693a463f",
+          "body": "{\n  \"status\" : 200,\n  \"message\" : \"Success\",\n  \"data\": {\n    \"tanggal\": \"2024-02-01\",\n    \"kategori\": \"Operasional\",\n    \"jumlah\": 800000,\n    \"keterangan\": \"Service mobil\"\n  }\n}\n",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    },
+    {
+      "uuid": "ddf75454-c826-4561-add8-6b2c162ebfb6",
+      "type": "http",
+      "documentation": "",
+      "method": "get",
+      "endpoint": "api/sewa/pemasukan",
+      "responses": [
+        {
+          "uuid": "988f14ab-0b0c-4f6a-82ed-5537587a0aad",
+          "body": "{\n  \"status\" : 200,\n  \"message\" : \"success\",\n  \"data\" : [\n    {\n      \"id\": 1,\n      \"tanggal\": \"2024-01-03\",\n      \"kategori\": \"Jasa Sewa\",\n      \"aset\": \"Mobil Avanza 2020\",\n      \"jumlah\": 500000,\n      \"keterangan\": \"Sewa 1 hari oleh Pak Budi\"\n    }\n  ]\n}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    },
+    {
+      "uuid": "75c28f90-120d-414f-9a43-09f23181965e",
+      "type": "http",
+      "documentation": "",
+      "method": "post",
+      "endpoint": "api/sewa/pemasukan/create",
+      "responses": [
+        {
+          "uuid": "009206cc-4f0e-41b0-af40-3e530ef1f6fa",
+          "body": "{\n  \"tanggal\": \"2024-02-05\",\n  \"kategori\": \"Penjualan Aset\",\n  \"aset_id\": 2,\n  \"jumlah\": 7000000,\n  \"keterangan\": \"Jual genset lama\"\n}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    },
+    {
+      "uuid": "fcc50845-13ce-45f4-a9f5-a8c291d6b46a",
+      "type": "http",
+      "documentation": "",
+      "method": "get",
+      "endpoint": "api/sewa/aset/transaction",
+      "responses": [
+        {
+          "uuid": "2cdf3c27-c370-44ac-8b60-b159aaa3021e",
+          "body": "{\n  \"status\" : 200,\n  \"message\" : \"Get Success\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"customer_name\": \"Daniel Manalu\",\n      \"asset_name\": \"Mobil Avanza\",\n      \"description\": \"Untuk digunakan syuting film\",\n      \"date\": \"2025-07-29\",\n      \"status\" : \"Aktif\"\n    },\n    {\n      \"id\": 2,\n      \"customer_name\": \"Soni Setiawan\",\n      \"asset_name\": \"Mobil Avanza\",\n      \"description\": \"Untuk digunakan syuting film\",\n      \"date\": \"2025-07-29\",\n      \"status\" : \"Aktif\"\n    },\n    {\n      \"id\": 3,\n      \"customer_name\": \"John Doe\",\n      \"asset_name\": \"Mobil Avanza\",\n      \"description\": \"Untuk digunakan syuting film\",\n      \"date\": \"2025-07-29\",\n      \"status\" : \"Aktif\"\n    }\n  ]\n}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    },
+    {
+      "uuid": "e51bebaf-5a35-4bd1-bb4b-2801791ea479",
+      "type": "http",
+      "documentation": "",
+      "method": "post",
+      "endpoint": "api/sewa/aset/transaction/create",
+      "responses": [
+        {
+          "uuid": "c260fc46-478d-4fd1-b1f4-c1a05f775cda",
+          "body": "{\n  \"status\" : 200,\n  \"message\" : \"Created\",\n  \"data\" : {\n      \"id\" : 1,\n      \"customer_name\" : \"Daniel Manalu\",\n      \"asset_name\" : \"Mobil Avanza\",\n      \"description\" : \"Untuk digunakan syuting film\",\n      \"date\" : \"2025-07-29\",\n      \"status\" : \"Disewakan\"\n  }\n}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    },
+    {
+      "uuid": "a8dd4286-bcdc-49eb-bb28-91cd00b536bb",
+      "type": "http",
+      "documentation": "",
+      "method": "put",
+      "endpoint": "api/sewa/pengeluaran/1",
+      "responses": [
+        {
+          "uuid": "eb727a13-3033-42db-977a-6ebcce902d76",
+          "body": "{\n  \"status\" : 200,\n  \"message\" : \"Success\",\n  \"data\": {\n    \"tanggal\": \"2024-02-01\",\n    \"kategori\": \"Operasional\",\n    \"jumlah\": 800000,\n    \"keterangan\": \"Service mobil\"\n  }\n}\n",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    },
+    {
+      "uuid": "ae6aef37-f086-4e26-8008-6af0840f85e4",
+      "type": "http",
+      "documentation": "",
+      "method": "delete",
+      "endpoint": "api/sewa/pengeluaran/1",
+      "responses": [
+        {
+          "uuid": "e1db8632-3d5c-4e5d-9369-2d71076a703c",
+          "body": "{\n  \"status\" : 200,\n  \"message\" : \"Success\",\n  \"data\": null\n}\n",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    }
+  ],
+  "rootChildren": [
+    {
+      "type": "route",
+      "uuid": "9d5281a0-fe1f-437e-84ee-c516923179ed"
+    },
+    {
+      "type": "route",
+      "uuid": "711c5d54-b8b3-4a2a-b1b7-73319ed56215"
+    },
+    {
+      "type": "route",
+      "uuid": "5658118f-c1d6-4c07-a5e6-6e5a9be68bd7"
+    },
+    {
+      "type": "route",
+      "uuid": "edcc29fe-d9d6-49d9-a2b2-7f2b257e2260"
+    },
+    {
+      "type": "route",
+      "uuid": "a20593a9-857f-49e0-b482-6cfab6221607"
+    },
+    {
+      "type": "route",
+      "uuid": "ddf75454-c826-4561-add8-6b2c162ebfb6"
+    },
+    {
+      "type": "route",
+      "uuid": "75c28f90-120d-414f-9a43-09f23181965e"
+    },
+    {
+      "type": "route",
+      "uuid": "fcc50845-13ce-45f4-a9f5-a8c291d6b46a"
+    },
+    {
+      "type": "route",
+      "uuid": "e51bebaf-5a35-4bd1-bb4b-2801791ea479"
+    },
+    {
+      "type": "route",
+      "uuid": "a8dd4286-bcdc-49eb-bb28-91cd00b536bb"
+    },
+    {
+      "type": "route",
+      "uuid": "ae6aef37-f086-4e26-8008-6af0840f85e4"
+    }
+  ],
+  "proxyMode": false,
+  "proxyHost": "",
+  "proxyRemovePrefix": false,
+  "tlsOptions": {
+    "enabled": false,
+    "type": "CERT",
+    "pfxPath": "",
+    "certPath": "",
+    "keyPath": "",
+    "caPath": "",
+    "passphrase": ""
+  },
+  "cors": true,
+  "headers": [
+    {
+      "key": "Content-Type",
+      "value": "application/json"
+    },
+    {
+      "key": "Access-Control-Allow-Origin",
+      "value": "*"
+    },
+    {
+      "key": "Access-Control-Allow-Methods",
+      "value": "GET,POST,PUT,PATCH,DELETE,HEAD,OPTIONS"
+    },
+    {
+      "key": "Access-Control-Allow-Headers",
+      "value": "Content-Type, Origin, Accept, Authorization, Content-Length, X-Requested-With"
+    }
+  ],
+  "proxyReqHeaders": [
+    {
+      "key": "",
+      "value": ""
+    }
+  ],
+  "proxyResHeaders": [
+    {
+      "key": "",
+      "value": ""
+    }
+  ],
+  "data": [],
+  "callbacks": []
+}
